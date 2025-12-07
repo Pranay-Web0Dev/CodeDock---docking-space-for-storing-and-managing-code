@@ -30,9 +30,18 @@ const initRepo = async () => {
 };
 
 
-const addFiles = async (argv) => {
-    const file = argv.file;
-    console.log(`File ${file} added to repository`);
+const addFiles = async (filePath) => {
+    const repoPath = path.resolve(process.cwd(), ".mygitrepo");
+    const stagedPath = path.join(repoPath, "staged")
+    try{
+        await fs.mkdir(stagedPath, {recursive: true});
+        const fileName = path.basename(filePath)
+        await fs.copyFile(fileName, path.join(stagedPath, fileName))
+        console.log(`File ${fileName} added to staging area`);
+
+    }catch(err){
+        console.error("Error adding file:", err);
+    }
 }
 
 const commitChanges = async (argv) => {
