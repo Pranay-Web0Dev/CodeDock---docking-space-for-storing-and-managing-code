@@ -1,4 +1,5 @@
 const yargs = require('yargs');
+require("dotenv").config();
 const { hideBin } = require('yargs/helpers');
 const { initRepo, addFiles, commitChanges, pullFiles, pushFiles, revertToCommit } = require('./server/controllers/gitCommandController');
 

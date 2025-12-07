@@ -1,6 +1,8 @@
 const fs = require("fs").promises;
 const path = require("path");
 // const { v4: uuidv4 } = require("uuid");
+const {s3, s3Bucket} = require("../../config/aws-config");
+// used for hiding folder on Windows
 const { exec } = require("child_process");
 
 const uuidv4 = async () => {
@@ -82,7 +84,29 @@ const commitChanges = async (message) => {
 }
 
 const pushFiles = async () => {
-    console.log("Files pushed to S3");
+    const repoPath = path.resolve(process.cwd(), ".mygitrepo")
+    const commitsPath = path.join(repoPath, "commits")
+    try{
+        const commitDirs = await fs.readdir(commitsPath)
+        for(const commitDir of commitDirs){
+            const commitPath = path.join(commitsPath, commitDir)
+            const files = await fs.readdir(commitPath)
+
+            for(const file of files){
+                const filePath = path.join(commitPath, file)
+                const fileContent = await fs.readFile(filePath)
+                const params = {
+                    Bucket: s3Bucket,
+                    Key: `commits/${commitDir}/${file}`,
+                    Body: fileContent
+                }
+                await s3.upload(params).promise()
+                console.log(`Uploaded ${file} from commit ${commitDir} to S3`);
+            }
+        }
+    }catch(err){
+        console.error("Error pushing files to S3:", err);
+    }
 }
 
 const pullFiles = async () => {
