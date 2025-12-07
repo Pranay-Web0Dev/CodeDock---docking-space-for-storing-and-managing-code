@@ -18,7 +18,7 @@ yargs(hideBin(process.argv))
                 describe: "commit message",
                 type: "string"
             })
-        }, commitChanges)
+        }, (argv)=>{ commitChanges(argv.message)})
     .command("push", "push files to s3", {}, pushFiles)
     .command("pull", "pull files to s3", {}, pullFiles)
     .command("revert <commitId>", "revert to specific commit",

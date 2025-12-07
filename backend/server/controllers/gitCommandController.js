@@ -1,6 +1,12 @@
 const fs = require("fs").promises;
 const path = require("path");
+// const { v4: uuidv4 } = require("uuid");
 const { exec } = require("child_process");
+
+const uuidv4 = async () => {
+  const { v4 } = await import("uuid");
+  return v4();
+};
 
 
 const initRepo = async () => {
@@ -44,9 +50,35 @@ const addFiles = async (filePath) => {
     }
 }
 
-const commitChanges = async (argv) => {
-    const message = argv.message;
-    console.log(`Changes committed with message: ${message}`);
+const commitChanges = async (message) => {
+    const repoPath = path.resolve(process.cwd(), ".mygitrepo")
+    const stagedPath = path.join(repoPath, "staged")
+    const commitsPath = path.join(repoPath, "commits")
+    try{
+        const commitId = await uuidv4()
+        // console.log("Generated commit ID:", commitId);
+        const commitDir = path.join(commitsPath, commitId)
+        await fs.mkdir(commitDir, {recursive: true})
+        const files = await fs.readdir(stagedPath)
+
+        for(const file of files){
+            await fs.copyFile(path.join(stagedPath, file), path.join(commitDir, file))
+        }
+
+        await fs.writeFile(
+            path.join(commitDir, "commit.json"),
+            JSON.stringify({
+                message,
+                timestamp : new Date().toISOString(),
+                commitId
+            })
+        )
+        console.log(`Changes committed in ${commitId} with message: ${message}`);
+
+    }catch(err){
+        console.error("Error committing changes:", err);
+    }
+
 }
 
 const pushFiles = async () => {
